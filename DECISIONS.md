@@ -1,0 +1,11 @@
+# Decisions (the brief is not a spec; these are the calls I made)
+
+1. **Duplicates.** 638 ticket_ids appear in both helpdesk and legacy_fd (migration re-import). Kept the helpdesk copy. Proof they are the same ticket: all other fields match; refund differs only by x100.
+2. **Legacy money = paise.** legacy_fd refund == 100 x helpdesk on all 125 duplicated refund pairs. Applied /100 to every legacy row. Cross-check: after scaling, no refund exceeds its order value (1,542 matched refunds), so the assumption holds on legacy-only rows too. The naive sum of the export is Rs 19.4 crore; that is the "crore" Arjun saw.
+3. **Month = month of created_at.** The export has no refund date. resolved_at for legacy rows is UTC-reconstructed, so I avoided it. A ticket created on 31 Jan and refunded on 2 Feb lands in January.
+4. **Open/pending tickets with a refund are included** (115 tickets, Rs 3.17 lakh) and flagged in reconciliation; money was raised even if the ticket is not closed.
+5. **GW-OTHER is the dropdown default, not a reason.** 42% of refund tickets carry it, but notes show most are payment, cancellation, or refund-chasing cases. I recover the reason from notes; where I cannot, it stays unresolved instead of being forced.
+6. **Agent ranking.** Raw rupees rank the Returns Desk and Billing first because that is their job (policy s6). I show refunds per 100 tickets handled, compare within team, flag Tier 2 as not comparable on volume, and report *double payouts* (a policy breach) as the "giving away money" measure rather than total refund size.
+7. **Cost of a double payout = replacement cost** (unit cost + Rs 340, policy s5, no refurbishment recovery). This is the conservative reading (the refund is treated as owed). The alternative (refund is the excess) is about 2x.
+8. **No LLM.** Notes are short and templated; a classifier trained on the agents' own non-default codes reaches 97% on confident cases at zero marginal cost. An LLM would help on the ~13% low-confidence remainder; not built or tested, so not claimed.
+9. **Ignored on purpose:** CSAT, handle time/SLA, first-contact resolution, transfers, timestamp-timezone repair, SLA breach credits. None changes the refund total; see SUBMISSION_ANSWERS.
